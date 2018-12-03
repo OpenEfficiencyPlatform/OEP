@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
+http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd">
+    <sfdc:config name="SalesforceConnectionString" username="${salesforce.user}" password="${salesforce.password}" securityToken="${salesforce.token}" url="${salesforce.url}" doc:name="Salesforce"/>
+    <flow name="getpendingprojects" processingStrategy="synchronous">
+        <poll doc:name="Poll">
+            <schedulers:cron-scheduler expression="${processCron}"/>
+            <logger level="INFO" doc:name="Logger"/>
+        </poll>
+        <flow-ref name="sessionauthentication" doc:name="sessionauthenticationFlow"/>
+        <foreach collection="#[payload]" doc:name="For Each">
+            <flow-ref name="processprojects" doc:name="processprojects"/>
+        </foreach>
+    </flow>
+       <flow name="sessionauthentication" initialState="started" processingStrategy="synchronous">
+        <custom-transformer class="com.psdconsulting.GetSession" doc:name="GetNewSession"/>
+        <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
+        <set-session-variable variableName="SessionCookie" value="#[payload.session_name + '=' + payload.sessid]" doc:name="Set Session Cookie Var"/>
+        <custom-transformer class="com.psdconsulting.SetAuthToken" doc:name="Set The AuthToken"/>
+        <flow-ref name="callfornewprojects" doc:name="Call For Updated Projects"/>
+    </flow>
+    <flow name="processprojects">
+        <custom-transformer class="com.psdconsulting.ProcessProject" doc:name="Get Details for Each project"/>
+        <message-filter doc:name="Message">
+            <not-filter>
+                <payload-type-filter expectedType="org.mule.transport.NullPayload"/>
+            </not-filter>
+		</message-filter>
+        <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
+        <scripting:transformer doc:name="Map EDAPT Details">
+            <scripting:script engine="Groovy" file="MapToSalesforce.groovy"/>
+        </scripting:transformer>
+        <sfdc:upsert config-ref="SalesforceConnectionString" externalIdFieldName="OEP_EDAPT__External_ID__c" type="OEP_EDAPT__Project__c" doc:name="Salesforce">
+            <sfdc:objects ref="#[payload]"/>
+        </sfdc:upsert>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+    <sub-flow name="callfornewprojects">
+    	<custom-transformer class="com.psdconsulting.GetPendingProjects" doc:name="Get Pending Projects"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
+    </sub-flow>
+</mule>
