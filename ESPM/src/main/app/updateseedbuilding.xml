@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:cxf="http://www.mulesoft.org/schema/mule/cxf" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/cxf http://www.mulesoft.org/schema/mule/cxf/current/mule-cxf.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+    <cxf:configuration name="CXF_Configuration" enableMuleSoapHeaders="true" initializeStaticBusInstance="true" doc:name="CXF Configuration"/>
+    <spring:beans>
+        <spring:bean id="inMemoryObjectStore" class="org.mule.util.store.SimpleMemoryObjectStore"/>
+    </spring:beans>
+    <vm:endpoint exchange-pattern="one-way" path="deadletterqueue" name="VM.DLQ" doc:name="VM"/>
+    <flow name="S2MDispatcherFlow" doc:name="S2MDispatcherFlow">
+        <http:inbound-endpoint exchange-pattern="request-response" host="${mule.endpoint.host}" port="${mule.endpoint.port}" path="S2M" doc:name="HTTP"/>
+        <cxf:jaxws-service configuration-ref="CXF_Configuration" serviceClass="com.psdconsulting.MuleSalesforce" doc:name="MuleSalesForce"/>
+        <set-property propertyName="method" value="#[flowVars['method'].name]" doc:name="Set Method"/>
+        <flow-ref name="S2MDispatcherPipeline" doc:name="Dispatch Pipeline"/>
+        <set-payload value="Success" doc:name="Success"/>
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <vm:outbound-endpoint exchange-pattern="one-way" ref="VM.DLQ" doc:name="VM"/>
+        </catch-exception-strategy>
+    </flow>
+    <sub-flow name="UpdateBuilding" doc:name="UpdateBuilding">
+    	 <logger message="#[payload]" level="INFO" category="SalesForce Job Id" doc:name="PreLogger"/>
+        <set-variable variableName="JobID" value="#[payload]" doc:name="SF JobID"/>
+        <sfdc:query config-ref="SalesforceConnection" query="Select psdconsulting__Street__c, Tax_Lot_ID__c from psdconsulting__Job__c where id = '#[variable:JobID]'" doc:name="Get Property from SF"/>
+        <set-variable variableName="PropertyAddress" value="#[payload[0].psdconsulting__Street__c]" doc:name="Street Address"/>
+        <set-variable variableName="TaxLotID" value="#[payload[0].Tax_Lot_ID__c]" doc:name="Tax ID"/>
+        <custom-transformer class="com.psdconsulting.FindSEEDBuilding" doc:name="Get SEED building from Address"/>
+        <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
+        <set-variable variableName="SeedBuilding" value="#[payload.buildings[0]]" doc:name="Just the Building portion"/>
+        <custom-transformer class="com.psdconsulting.UpdateSEEDBuilding" doc:name="Update in SEED"/>
+        <logger level="INFO" doc:name="Logger" message="#[payload]"/>
+    
+    </sub-flow>
+    <flow name="S2MDispatcherPipeline" doc:name="S2MDispatcherPipeline">
+        <logger message="Dispatching the following S2M flow: #[flowVars['method'].name]" level="INFO" category="Dispatchination" doc:name="Logger"/>
+		<choice doc:name="Choice">
+            <when expression="#[flowVars['method'].name == 'UpdateProperty']">
+                <until-successful objectStore-ref="inMemoryObjectStore" maxRetries="3" secondsBetweenRetries="60" doc:name="Until Successful">
+                    <flow-ref name="UpdateBuilding" doc:name="Update SEED Building"/>
+                </until-successful>
+            </when>
+            <otherwise>
+                <logger message="No flow configured for action #[message.inboundProperties.method]" level="ERROR" category="S2MDispatcher" doc:name="Logger"/>
+            </otherwise>
+        </choice>
+        <rollback-exception-strategy doc:name="Rollback Exception Strategy">
+            <set-variable variableName="exceptionCaught" value="#[payload]" doc:name="Variable"/>
+        </rollback-exception-strategy>
+    </flow>
+</mule>

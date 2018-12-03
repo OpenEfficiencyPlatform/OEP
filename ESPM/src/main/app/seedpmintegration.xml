@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<mule xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:mulexml="http://www.mulesoft.org/schema/mule/xml" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns:https="http://www.mulesoft.org/schema/mule/https" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:quartz="http://www.mulesoft.org/schema/mule/quartz"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.5.2"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.mulesoft.org/schema/mule/quartz http://www.mulesoft.org/schema/mule/quartz/current/mule-quartz.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mule/schedulers/current/mule-schedulers.xsd
+http://www.mulesoft.org/schema/mule/https http://www.mulesoft.org/schema/mule/https/current/mule-https.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/current/mule-xml.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd">
+ 
+	<context:property-placeholder location="seedpmintegration.properties"/>
+    <https:connector name="PM" cookieSpec="netscape" validateConnections="false" sendBufferSize="0" receiveBufferSize="0" receiveBacklog="0" clientSoTimeout="10000" serverSoTimeout="10000" socketSoLinger="0" doc:name="PM" enableCookies="true">
+        <https:tls-server path="C:\Program Files\Java\jdk1.7.0_51\jre\lib\security\cacerts" storePassword="changeit" explicitOnly="true"/>
+    </https:connector>
+    <spring:beans>
+        <spring:bean id="objectStore" name="ObjectStore" class="org.mule.util.store.SimpleMemoryObjectStore" lazy-init="true"/>
+        <spring:bean id="objectStore2" name="objectStore2" class="org.mule.util.store.SimpleMemoryObjectStore"/>
+    </spring:beans>
+    <sfdc:config name="SalesforceConnection" username="${salesforce.user}" password="${salesforce.password}" securityToken="${salesforce.token}" url="${salesforce.url}" doc:name="Salesforce"/>
+    <flow name="PMPendingAuths" doc:name="PMPendingAuths">
+        <poll doc:name="Poll">
+            <schedulers:cron-scheduler expression="0 0/1 * * * ?"/>
+            <custom-transformer class="com.psdconsulting.GetPendingAuths" doc:name="Get Pending Properties"/>
+        </poll>
+        <logger message="#[payload]" level="INFO" doc:name="Log the Pending Auths"/>
+        <custom-transformer class="com.psdconsulting.CreateFile" doc:name="Create Ouput CSV File and write Headers"/>
+        <splitter  expression="#[xpath('//propertyId/text()')]" tracking:enable-default-events="true" doc:name="Split the pending properties"/>
+        <flow-ref name="ProcessShareRequest" doc:name="Process"/>
+        <collection-aggregator failOnTimeout="false" doc:name="Collection Aggregator" tracking:enable-default-events="true"/>
+        <custom-transformer class="com.psdconsulting.CreateSEEDDataset" doc:name="Create SEED Dataset"/>
+
+        <custom-transformer class="com.psdconsulting.NotifySEEDFileUploaded" doc:name="Notify SEED about File Upload"/>
+        <until-successful objectStore-ref="objectStore" maxRetries="5" failureExpression="#[!flowVars[&quot;progressStatus&quot;].equals(&quot;success&quot;)]" doc:name="Until Successful">
+            <custom-transformer class="com.psdconsulting.CheckProgress" doc:name="Check Save Data progress"/>
+        </until-successful>
+        <custom-transformer class="com.psdconsulting.StartBuildingMatching" doc:name="Map Buildings, System Matching"/>
+        <until-successful objectStore-ref="objectStore2" maxRetries="5" doc:name="Until Successful" failureExpression="#[!flowVars[&quot;progressStatus&quot;].equals(&quot;success&quot;)]">
+            <custom-transformer class="com.psdconsulting.CheckProgress" doc:name="Check System matching progress"/>
+        </until-successful>
+         <rollback-exception-strategy doc:name="Rollback_Exception_Strategy:">
+            <set-variable variableName="ExceptionDetails" value="There was an error: #[exception.getEvent()] with the following details #[exception.getCauseException()] " doc:name="Compile what is known"/>
+            <set-payload value="The push to SEED cannot be completed.  The following details are available: #[flowVars['OutboundFileName']], #[flowVars['ImportFileID']]" doc:name="Set Payload with exception"/>
+         </rollback-exception-strategy>
+    </flow>
+    <sub-flow name="ProcessShareRequest" doc:name="ProcessShareRequest">
+        <custom-transformer class="com.psdconsulting.AcceptPropertyShared" doc:name="Accept Share"/>
+        <set-variable variableName="PropertyID" value="#[payload]" doc:name="record Property Id"/>
+        <flow-ref name="GetPropertyDetails" doc:name="Get Property Details"/>
+    </sub-flow>
+    <sub-flow name="GetPropertyDetails" doc:name="GetPropertyDetails">
+        <custom-transformer class="com.psdconsulting.GetPropertyDetails" doc:name="Get Property Details"/>
+        <custom-transformer class="com.psdconsulting.WritePropertyDetailsToFile" doc:name="Open File, write property details, close it again."/>
+        <flow-ref name="GetMetrics" doc:name="Get Metrics"/>
+    </sub-flow>
+
+    <sub-flow name="GetMetrics" doc:name="GetMetrics">
+        <custom-transformer class="com.psdconsulting.GetMetricsForProperty" doc:name="Get Property Metrics"/>
+        <custom-transformer class="com.psdconsulting.WriteMetricsToFile" doc:name="Write Metrics To File"/>
+        <sfdc:upsert config-ref="SalesforceConnection" externalIdFieldName="psdconsulting__ExternalID__c" type="psdconsulting__Job__c" doc:name="Salesforce">
+            <sfdc:objects ref="#[flowVars['SFJob']]"/>
+        </sfdc:upsert>
+
+    </sub-flow>
+    
+   
+</mule>
