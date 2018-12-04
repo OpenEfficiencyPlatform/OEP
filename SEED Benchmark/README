@@ -1,1 +1,2 @@
-
+# SEED Benchmark
+The Benchmark use case was piloted with the City of San Francisco to support their Benchmarking mandate. The City of San Francisco is importing ESPM benchmarking data into SEED. They are then transfering data from SEED into Salesforce to support reporting and CRM functions like emailing contacts. The OEP use case provides the automation of data from SEED to Salesforce via MuleSoft Community Edition API. It uses the OEP Salesforce Managed Package that includes a custom Benchmark object and the Account and Contact standard Salesforce objects. Automation of data flow between SEED and Salesforce is triggered by SEED Labels depending if the Benchmark has complied or not. 
