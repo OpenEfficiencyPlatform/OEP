@@ -1,1 +1,5 @@
+#Salesforce
 
+The SEED Benchmark use case uses the OEP Salesforce managed package. Go to OEP/Salesforce Pacakge to install the managed package.
+
+The SEED Benchmark uses the Premises and Benchmark managed package objects and uses the standard Account, and Contact objects. It includes Benchmark reports and email templates. 
