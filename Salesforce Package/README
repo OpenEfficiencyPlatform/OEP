@@ -1,1 +1,18 @@
 # Salesforce Package
+Install OEP Salesforce managed package "OEI Package":
+Login to your organizations Salesforce instance. (If you do not already have an instance, go to Salesforce.com to learn more about Salesforce and its licensing options.)
+
+Navigate to the app by entering the URL below depending on if the instance is a Sandbox or Production site:
+Sandbox: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t1N000000Gmmp
+Production: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t1N000000Gmmp
+
+Enter the password: xxx 
+Select “Install for all Users”
+Accept conditions
+Select Install
+
+Go to Setup, search for Installed Packages, confirm “OEI Platform” is installed. Select OEI app to view and use it.
+
+Reference the OEP Data Model for the OEI Package:
+Go to: 
+
