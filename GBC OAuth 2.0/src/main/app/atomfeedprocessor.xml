@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:mulexml="http://www.mulesoft.org/schema/mule/xml"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" xmlns:atom="http://www.mulesoft.org/schema/mule/atom"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/current/mule-xml.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/atom http://www.mulesoft.org/schema/mule/atom/current/mule-atom.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <db:generic-config name="GreenButtonDataStore" url="jdbc:sqlserver://${GB.DBServer};databaseName=${GB.Datastore};user=${GB.Username};password=${GB.Password}" driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver" doc:name="Generic Database Configuration"/>
+    <flow name="atomfeedprocessorFlow" >
+        <!-- <poll doc:name="Poll">
+            <fixed-frequency-scheduler frequency="10" timeUnit="MINUTES" startDelay="10"/>
+            <db:select config-ref="GreenButtonDataStore" doc:name="Database">
+                <db:parameterized-query><![CDATA[Select Id, RawData from IntervalData where IsProcessed = 'False']]></db:parameterized-query>
+            </db:select>
+        </poll>  -->
+        <foreach doc:name="For Each" collection="#[payload[0].RawData]">
+            <mulexml:dom-to-xml-transformer doc:name="DOM to XML"/>
+            <atom:object-to-feed-transformer/>
+           	<component class="tecintegration.FeedReceiver" doc:name="Java"/>
+            <db:insert config-ref="GreenButtonDataStore" doc:name="SQL Database">
+                <db:parameterized-query><![CDATA[INSERT into IntervalData Values (newid(), #[flowVars['FileName']], #[payload])]]></db:parameterized-query>
+            </db:insert>
+        </foreach>
+    </flow>
+</mule>
