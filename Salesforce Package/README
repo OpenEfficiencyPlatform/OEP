@@ -1,5 +1,5 @@
 # Salesforce Package
-The "OEI Package" is a Salesforce.com managed package. It was developed with fields mapped from ENERGY STAR Portfolio Manager (ESPM), Asset Score, and Energy Design Assistance Program Tracker (EDAPT) into one data model that is designed to support energy program management and benchmarking. It's naming conventions are based on Building Energy Data Exchange Specificiation (BEDES) taxonomy. 
+The "OEI Package" is a Salesforce.com managed package. It was developed with fields mapped from ENERGY STAR Portfolio Manager (ESPM), Asset Score, and Energy Design Assistance Program Tracker (EDAPT) into one data model. It is designed to support energy program management and benchmarking. It's naming conventions are based on Building Energy Data Exchange Specification (BEDES) taxonomy. 
 
 Reference the OEP Data Model for Object Relationships and Field level details for the Objects. 
 
