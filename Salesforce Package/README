@@ -1,4 +1,9 @@
 # Salesforce Package
+The "OEI Package" is a Salesforce.com managed package. It was developed with fields mapped from ENERGY STAR Portfolio Manager (ESPM), Asset Score, and Energy Design Assistance Program Tracker (EDAPT) into one data model that is designed to support energy program management and benchmarking. It's naming conventions are based on Building Energy Data Exchange Specificiation (BEDES) taxonomy. 
+
+Reference the OEP Data Model for Object Relationships and Field level details for the Objects. 
+
+Setup Instructions:
 Install OEP Salesforce managed package "OEI Package":
 Login to your organizations Salesforce instance. (If you do not already have an instance, go to Salesforce.com to learn more about Salesforce and its licensing options.)
 
@@ -12,6 +17,3 @@ Accept conditions
 Select Install
 
 Go to Setup, search for Installed Packages, confirm “OEI Platform” is installed. Select OEI app to view and use it.
-
-Reference the OEP Data Model for Object Relationships and Field level details for the Objects.  
-
