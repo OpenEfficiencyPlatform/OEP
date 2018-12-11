@@ -3,17 +3,16 @@ The "OEI Package" is a Salesforce.com managed package. It was developed with fie
 
 Reference the OEP Data Model for Object Relationships and Field level details for the Objects. 
 
-Setup Instructions:
-Install OEP Salesforce managed package "OEI Package":
+Installation Instructions:
 Login to your organizations Salesforce instance. (If you do not already have an instance, go to Salesforce.com to learn more about Salesforce and its licensing options.)
 
-Navigate to the app by entering the URL below depending on if the instance is a Sandbox or Production site:
-Sandbox: xxxx
-Production: xxxx
+Navigate to the app by entering the URL below. (Select the url with "test" if the Salesforce instance is a Sandbox site; select the url with "login" if the Salesforce instance is a Production site.)
+Sandbox: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t1N000000GnV8
+Production: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t1N000000GnV8
 
-Enter the password: xxxx 
+Enter the password: MLLk7aCPvz2cBTP3pV3Y 
 Select “Install for all Users”
-Accept conditions
-Select Install
+Accept "I acknowledge that I’m installing a Non-Salesforce Application that is not authorized for distribution as part of Salesforce’s AppExchange Partner Program."
+Select "Install"
 
 Go to Setup, search for Installed Packages, confirm “OEI Platform” is installed. Select OEI app to view and use it.
