@@ -7,9 +7,9 @@ SEED.url=
 
 #Quartz expression to define the polling frequency to call SEED API for updated Benchmarks
 #  -- currently configured to fire every hour on the hour --
-# cron.timer=0 0/60 * ? * * *
+cron.timer=0 0/60 * ? * * *
 # For testing... run every minute
-cron.timer=* * * ? * * *
+# cron.timer=* * * ? * * *
 
 #Salesforce API configuration
 salesforce.url=https://test.salesforce.com/services/Soap/u/37.0
