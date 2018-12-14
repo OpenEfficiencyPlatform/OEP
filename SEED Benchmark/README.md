@@ -10,3 +10,10 @@ It includes the OEP Benchmark Implementation Guide and OEP User Guide.
 "OEI" folder holds the self extracting zip MuleSoft files to be used for Docker.
 
 "mulesoft" folder holds files using the MuleSoft Anypoint Studio to review or edit the MuleSoft files.
+
+
+# TODO
+
+* Remove spaces from directory names. It can cause some trivial issues with Docker
+
+
