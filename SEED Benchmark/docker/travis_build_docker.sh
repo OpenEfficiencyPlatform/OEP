@@ -8,9 +8,6 @@ if [ "${TRAVIS_BRANCH}" == "develop" ]; then
 elif [ "${TRAVIS_BRANCH}" == "master" ]; then
     # Retrieve the version number from the OEI/pom.xml file
     IMAGETAG=$( cat "SEED Benchmark/OEI/pom.xml"  | sed '2 s/xmlns=".*"//g' | xmllint --xpath "string(/project/version)" -)
-elif [ "${TRAVIS_BRANCH}" == "travis" ]; then
-    # Retrieve the version number from the OEI/pom.xml file
-    IMAGETAG=$( cat "SEED Benchmark/OEI/pom.xml"  | sed '2 s/xmlns=".*"//g' | xmllint --xpath "string(/project/version)" -)
 fi
 
 echo $IMAGETAG
