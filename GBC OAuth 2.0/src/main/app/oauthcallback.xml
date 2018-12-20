@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:oauth2="http://www.mulesoft.org/schema/mule/oauth2" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/oauth2 http://www.mulesoft.org/schema/mule/oauth2/current/mule-oauth2.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <http:request-config name="SCE_Token_Request" protocol="HTTPS" host="${sce.datashare.endpoint}" doc:name="HTTP Request Configuration" port="443" usePersistentConnections="false" responseTimeout="60000">
+        <tls:context>
+            <tls:trust-store path="energydatashare_sce_com.jks" password="${server.truststore.password}" type="jks"/>
+            <tls:key-store type="jks" path="psdconsulting_com.jks" keyPassword="${server.truststore.password}" password="${server.truststore.password}"/>
+        </tls:context>
+
+    </http:request-config>
+    <oauth2:token-manager-config name="Token_Manager_Config" doc:name="Token Manager Config"/>
+    <flow name="oauthcallbackflow">
+        <http:listener config-ref="HTTPS_Listener_Configuration" path="Authenticate/OAuthCallBack" doc:name="OAuth Callback Endpoint"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <set-payload value="#[message.inboundProperties.'http.query.params']" doc:name="Set Payload"/>
+        <foreach doc:name="For Each">
+            <logger message="#[flowVars['key']] : #[payload]" level="INFO" doc:name="Logger"/>
+            <set-variable variableName="#[flowVars['key']]" value="#[payload]" doc:name="Variable"/>
+            <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        </foreach>
+        <flow-ref name="SaveAuthToken" doc:name="SaveAuthToken"/>
+        <logger message="CISRID is: #[flowVars.cisrid]" level="INFO" doc:name="Logger"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="retrieveAuthToken">
+        <custom-transformer class="tecintegration.transformers.AssembleTokenRequest" doc:name="Assemble the Access Token request"/>
+        <http:request config-ref="SCE_Token_Request" path="/" method="POST"  doc:name="HTTP">
+            <http:request-builder>
+                <http:uri-params expression="#[payload]"/>
+                <http:header headerName="Content-Type" value="application/x-www-form-urlencoded"/>
+
+            </http:request-builder>
+        </http:request>
+        <copy-properties propertyName="*" doc:name="Property"/>
+        <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
+    </flow>
+    <sub-flow name="SaveAuthToken">
+        <db:update config-ref="GreenButtonDataStore" doc:name="Database">
+            <db:dynamic-query><![CDATA[Update ManagerAuthorizations SET AuthToken = '#[payload.access_token]', InProcess = 'False' WHERE InProcess = 'True']]></db:dynamic-query>
+        </db:update>
+    </sub-flow>
+</mule>

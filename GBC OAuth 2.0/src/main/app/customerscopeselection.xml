@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:https="http://www.mulesoft.org/schema/mule/https" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:jetty-ssl="http://www.mulesoft.org/schema/mule/jetty-ssl" xmlns:jetty="http://www.mulesoft.org/schema/mule/jetty" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jetty http://www.mulesoft.org/schema/mule/jetty/current/mule-jetty.xsd
+http://www.mulesoft.org/schema/mule/jetty-ssl http://www.mulesoft.org/schema/mule/jetty-ssl/current/mule-jetty-ssl.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/https http://www.mulesoft.org/schema/mule/https/current/mule-https.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    
+    <flow name="customerscopeselectionFlow">
+        <http:listener config-ref="HTTPS_Listener_Configuration" path="Authenticate/CustomerScopeSelection" doc:name="HTTPS"/>
+        <set-payload value="#[message.inboundProperties.'http.query.params']" doc:name="Set Payload"/>
+        <foreach doc:name="For Each">
+            <set-variable variableName="#[flowVars['key']]" value="#[payload]" doc:name="Variable"/>
+            <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        </foreach>
+        <flow-ref name="SaveCISRId" doc:name="SaveCISRId"/>
+        <custom-transformer class="tecintegration.transformers.AssembleReturnURL" doc:name="assemble the redirect"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <!-- <set-variable variableName="CodeNotFound" value="https://${mule.dns.name}:${mule.endpoint.secure}/authorize/client" doc:name="Set Post URL"/> -->
+        <parse-template location="${app.home}/webapps/authorize/confirmation.jsp" doc:name="Parse Template"/>
+        <set-property doc:name="Content Type" propertyName="Content-Type" value="text/html"/>
+    </flow>
+    <flow name="SaveCISRId">
+        <db:update config-ref="GreenButtonDataStore" doc:name="Update and Set CISIR">
+            <db:dynamic-query><![CDATA[Update ManagerAuthorizations SET CisrId = '#[flowVars.cisrId]' WHERE InProcess = 'True']]></db:dynamic-query>
+        </db:update>
+    </flow>
+</mule>

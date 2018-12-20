@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:mulexml="http://www.mulesoft.org/schema/mule/xml" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:jetty-ssl="http://www.mulesoft.org/schema/mule/jetty-ssl" xmlns:jetty="http://www.mulesoft.org/schema/mule/jetty" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jetty http://www.mulesoft.org/schema/mule/jetty/current/mule-jetty.xsd
+http://www.mulesoft.org/schema/mule/jetty-ssl http://www.mulesoft.org/schema/mule/jetty-ssl/current/mule-jetty-ssl.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/current/mule-xml.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+
+    <file:connector name="File" autoDelete="false" streaming="true" validateConnections="true" doc:name="File"/>
+    <flow name="notificationflow">
+        <http:listener config-ref="HTTPS_Listener_Configuration" path="Authenticate/Notification" doc:name="HTTPS" allowedMethods="POST"/>
+        <vm:outbound-endpoint exchange-pattern="one-way" path="NotificationQueue" doc:name="VM"/>
+        <set-payload value="Success" doc:name="Set Payload"/>
+
+    </flow>
+    <flow name="notificationFlow">
+        <vm:inbound-endpoint exchange-pattern="one-way" path="NotificationQueue" doc:name="VM"/>
+        <logger message="Log the notification from SCE: #[payload]" level="INFO" doc:name="Logger"/>
+        <mulexml:dom-to-xml-transformer doc:name="DOM to XML"/>
+        <logger message="Log after conversion to XML: #[payload]" level="INFO" doc:name="Logger"/>
+        <set-payload value="#[xpath3('//*[local-name()=\'resources\']', payload, 'NODESET')]" doc:name="Set Payload"/>
+        <foreach collection="#[payload]" doc:name="For Each">
+            <set-variable variableName="resource" value="#[xpath3('text()', payload, 'STRING')]" doc:name="get resource name"/>
+            <set-variable variableName="resourceURI" value="#[flowVars['resource'].substring(flowVars['resource'].lastIndexOf('/DataCustodian'))]" doc:name="set URI"/>
+            <set-variable variableName="resourceArray" value="#[flowVars['resourceURI'].split('/')]" doc:name="Variable"/>
+            <set-variable variableName="FileName" value="#[flowVars.resourceArray[flowVars.resourceArray.length -1]]" doc:name="set File name"/>
+            <logger message="Log the resource URI: #[flowVars['resourceURI']]" level="INFO" doc:name="Logger"/>
+            <choice doc:name="Choice">
+                <when expression="#[flowVars.counter &gt; 1]">
+                    <logger message="Using session AuthToken" level="INFO" doc:name="Logger"/>
+                </when>
+                <otherwise>
+                    <flow-ref name="getBearerToken" doc:name="getBearerToken"/>
+                </otherwise>
+            </choice>
+            <flow-ref name="getResource" doc:name="getResource"/>
+        </foreach>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+    <sub-flow name="getBearerToken">
+        <custom-transformer class="tecintegration.transformers.AssembleResourceTokenRequest" doc:name="Assemble the Access Token request"/>
+        <http:request config-ref="SCE_Token_Request" path="/OAuthServices/oauth20/token" method="POST" doc:name="Token Endpoint">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/x-www-form-urlencoded"/>
+                <http:header headerName="Authorization" value="Basic MG9hNjdiZjRsdk8ydVFNN24xdDc6MTB5NFZxQkhfV2MzQkRxSmtSd2ZEYmF6amNFOWswT2puNDJPalIwVQ=="/>
+            </http:request-builder>
+        </http:request>
+        <logger message="Log the return from Token Endpoint: #[payload]" level="INFO" doc:name="Logger"/>
+        <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
+        <set-variable variableName="AccessToken" value="#[payload.get(&quot;access_token&quot;)]" doc:name="Variable: save Auth token"/>
+    </sub-flow>
+    <flow name="getResource">
+        <set-payload value="#['Bearer ' + flowVars.AccessToken]" doc:name="Set Payload"/>
+
+        <http:request config-ref="SCE_Token_Request" path="#[flowVars.resourceURI]" method="GET"  doc:name="Data Share Endpoint">
+            <http:request-builder>
+                <http:header headerName="Authorization" value="#[payload]"/>
+
+            </http:request-builder>
+        </http:request>
+        <mulexml:dom-to-xml-transformer mimeType="text/xml"  doc:name="DOM to XML" />
+
+        <file:outbound-endpoint path="/tmp/UnprocessedFiles" outputPattern="#[flowVars.FileName]" connector-ref="File" responseTimeout="10000" doc:name="File"/>
+        <logger message="Inserted #[flowVars.FileName] into DB" level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>

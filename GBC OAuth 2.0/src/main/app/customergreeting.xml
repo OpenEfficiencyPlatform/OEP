@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:jetty-ssl="http://www.mulesoft.org/schema/mule/jetty-ssl"
+	xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:context="http://www.springframework.org/schema/context" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.springframework.org/schema/beans" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:jetty="http://www.mulesoft.org/schema/mule/jetty"
+    xsi:schemaLocation="http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/jetty-ssl http://www.mulesoft.org/schema/mule/jetty-ssl/current/mule-jetty-ssl.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jetty http://www.mulesoft.org/schema/mule/jetty/current/mule-jetty.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	
+    <jetty:connector name="jettyConnector" doc:name="Jetty">
+		<jetty:webapps directory="${app.home}/webapps" port="${mule.jetty.port}" host="${mule.endpoint.host}" />
+    </jetty:connector>
+    <context:property-placeholder location="tecintegration.properties"/>
+    <http:request-config name="Compass_Connection" host="${compass.host}" port="${compass.port}" doc:name="HTTP Request Configuration">
+        <http:basic-authentication username="${compass.director.username}" password="${compass.director.password}"/>
+    </http:request-config>
+    <http:listener-config name="HTTP_Listener_Configuration" host="${mule.endpoint.host}" port="${mule.endpoint.port}" doc:name="HTTP Listener Configuration"/>              
+     <http:listener-config name="HTTPS_Listener_Configuration" host="${mule.endpoint.host}" port="${mule.endpoint.secure}" doc:name="HTTPS Listener Configuration" protocol="HTTPS">
+        <tls:context>
+            <tls:key-store type="jks" path="psdconsulting_wildcard.jks" keyPassword="${server.truststore.password}" password="${server.truststore.password}"/>
+        </tls:context>
+
+
+
+
+
+    </http:listener-config>
+    <flow name="auth-configFlow">
+        <http:listener config-ref="HTTPS_Listener_Configuration" path="authorize/client" allowedMethods="POST" doc:name="HTTPS"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="CustomerCode" value="#[payload.compassKey]" doc:name="Customer Code"/>
+        <http:request config-ref="Compass_Connection" path="api/serviceproviders" method="GET" doc:name="Service Providers which match customer code">
+            <http:request-builder>
+                <http:query-param paramName="Filter" value="{'CustomerCode':'#[flowVars.CustomerCode]'}"/>
+            </http:request-builder>
+        </http:request>
+        <json:json-to-object-transformer doc:name="JSON to Object" returnClass="java.lang.Object"/>
+        <choice doc:name="Choice">
+            <when expression="#[message.payload.isEmpty()]">
+                <logger level="INFO" doc:name="Logger"/>
+            </when>
+            <otherwise>
+            	<db:select config-ref="GreenButtonDataStore" doc:name="Query for Manager">
+                    <db:parameterized-query><![CDATA[Select * from ManagerAuthorizations where CustomerCode = '#[flowVars["CustomerCode"]]']]></db:parameterized-query>
+                </db:select>
+                <logger message="Query Results: #[payload]" level="INFO" doc:name="Logger"/>
+                <choice doc:name="Does this Manager Exist already?">
+                    <when expression="#[message.payload.isEmpty()]">
+                        <db:insert config-ref="GreenButtonDataStore" doc:name="No, so insert">
+                            <db:dynamic-query><![CDATA[INSERT INTO ManagerAuthorizations (ManagerID, CustomerCode, InProcess) VALUES (NEWID(), '#[flowVars["CustomerCode"]]', 'True')]]></db:dynamic-query>
+                        </db:insert>
+                    </when>
+                    <otherwise>
+                        <logger message="#[payload]" level="INFO" doc:name="Yes, so log and move on"/>
+                    </otherwise>
+                </choice>
+                <set-variable variableName="ManagerDetails" value="#[payload]" doc:name="Correct Manager"/>
+            </otherwise>
+        </choice>
+
+        <set-variable variableName="ThirdPartyLogin" value="${sce.authorization}" doc:name="Set 3rd party login redirect"/>
+        <choice doc:name="Choice">
+            <when expression="#[flowVars['ManagerDetails'] != null]">
+                <flow-ref name="redirect-to-SCE" doc:name="redirect-to-SCE"/>
+            </when>
+            <otherwise>
+                <set-variable variableName="CodeNotFound" value="https://${mule.dns.name}:${mule.endpoint.secure}/authorize/client" doc:name="Set Post URL"/>
+                <parse-template location="${app.home}/webapps/authorize/codenotfound.jsp" doc:name="Parse Template"/>
+                <set-property doc:name="Content Type" propertyName="Content-Type" value="text/html"/>
+            </otherwise>
+        </choice>
+    </flow>
+    <flow name="redirect-to-SCE">
+        <logger message="now we redirect this: #[payload]" level="INFO" doc:name="Logger"/>
+        <parse-template location="${app.home}/webapps/authorize/codefound.jsp" doc:name="Parse Template"/>
+        <set-property doc:name="Content Type" propertyName="Content-Type" value="text/html"/>
+    </flow>
+</mule>

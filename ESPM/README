@@ -1,3 +1,3 @@
 # ESPM
 
-This is sample MuleSoft code that was used to connect ENERGY STAR Portfolio Manager (ESPM). The sample code does not use the OEP Salesforce managed package or it's respective ESPM and Benchmark field mappings. 
+This is sample MuleSoft code that was used to connect ENERGY STAR Portfolio Manager (ESPM) to Salesforce.com. The sample code delivers ESPM data directly to Salesforce. This code can be referenced for building MuleSoft connections to ESPM. The sample code does not use the OEP Salesforce managed package or it's respective ESPM field mappings. 

@@ -1,0 +1,4 @@
+.idea
+/SEED Benchmark/conf/*/*.properties
+/SEED Benchmark/conf/*/*.conf
+~$*.docx

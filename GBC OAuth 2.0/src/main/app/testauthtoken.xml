@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+   
+    <flow name="testauthtokenFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/TEST" allowedMethods="GET" doc:name="HTTP"/>
+        <set-variable variableName="resourceURI" value="/DataCustodian/espi/1_1/resource/Batch/Bulk/ESPI_Hadoop/ECONPPLKTXPBJN/ESPI_ECONPPLKTXPBJN_REVQ_20181204_171648_1.XML" doc:name="Variable"/>
+        <custom-transformer class="tecintegration.transformers.AssembleResourceTokenRequest" doc:name="Java"/>
+        <http:request config-ref="SCE_Token_Request" path="/OAuthServices/oauth20/token" method="POST" doc:name="HTTP">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/x-www-form-urlencoded"/>
+                <http:header headerName="Authorization" value="Basic MG9hNjdiZjRsdk8ydVFNN24xdDc6MTB5NFZxQkhfV2MzQkRxSmtSd2ZEYmF6amNFOWswT2puNDJPalIwVQ=="/>
+            </http:request-builder>
+        </http:request>
+        <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
+        <logger message="#[payload.get(&quot;access_token&quot;)]" level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>
