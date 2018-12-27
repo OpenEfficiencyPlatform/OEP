@@ -1,6 +1,6 @@
 # SEED Benchmark
 
-[![Build Status](https://travis-ci.org/SEED-platform/OEP.svg?branch=develop)](https://travis-ci.org/SEED-platform/OEP)
+[![Build Status](https://travis-ci.org/SEED-platform/OEP.svg?branch=Dev)](https://travis-ci.org/SEED-platform/OEP)
 
 The OEP SEED Benchmark supports Benchmark programs by automting benchmark record data updadates from the Standard Energy Efficiecny Data (SEED) Platform in Salesforce.com. The automation is provided via MuleSoft Anypoint Platform Community Edition API. The MuleSoft API provides one-way data flow, with Property records in SEED updating Benchmark records, and creating Account and Contract records in a Salecforce managed package called the "OEI Package". The OEI Package includes example Benchmark reports and email templates.
 
