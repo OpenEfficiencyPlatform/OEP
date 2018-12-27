@@ -13,6 +13,9 @@ It includes the OEP Benchmark Implementation Guide and OEP User Guide.
 
 "mulesoft" folder holds files using the MuleSoft Anypoint Studio to review or edit the MuleSoft files.
 
+## Deployment
+
+The preferred method of deployment is to use docker and docker stack deploy. The docker containers are provided on [Docker Hub](https://cloud.docker.com/u/seedplatform/repository/docker/seedplatform/oep) but can also be built locally for development and testing. In order to use docker, it is recommended to follow the instructions in the [docker folder](docker/README.md). The instructions include how to configure the configuration files for deployment.
 
 # TODO
 
