@@ -3,13 +3,17 @@
 #SEED authorization configuration
 SEED.user=
 SEED.apikey=
+SEED.protocol=HTTPS
+SEED.port=443
 SEED.url=
 
+
 #Quartz expression to define the polling frequency to call SEED API for updated Benchmarks
+#http://www.quartz-scheduler.org/documentation/quartz-2.x/tutorials/crontrigger.html
 #  -- currently configured to fire every hour on the hour --
-cron.timer=0 0/60 * ? * * *
-# For testing... run every minute
-# cron.timer=* * * ? * * *
+#cron.timer=0 0/60 * ? * * *
+#For debugging, use the command below to fire every minute
+#cron.timer=0 0/1 * ? * * *
 
 #Salesforce API configuration
 salesforce.url=https://test.salesforce.com/services/Soap/u/37.0

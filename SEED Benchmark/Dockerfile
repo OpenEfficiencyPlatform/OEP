@@ -27,6 +27,11 @@ ENV MULE_HOME /opt/mule
 
 # copy over the OEI application
 COPY /OEI /opt/mule/apps/oei/
+#COPY /conf/oei.properties /opt/mule/conf/oei.properties
+
+COPY /docker/entrypoint.sh /usr/local/bin/mule-entrypoint
+RUN chmod 775 /usr/local/bin/mule-entrypoint
+ENTRYPOINT ["mule-entrypoint"]
 
 VOLUME ["/opt/mule/logs", "/opt/mule/conf", "/opt/mule/apps", "/opt/mule/domains"]
 WORKDIR /opt/mule

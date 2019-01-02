@@ -41,7 +41,7 @@ http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sft
 	 <sfdc:config name="Testbed-Salesforce" username="${salesforce.user}" password="${salesforce.password}" securityToken="${salesforce.token}" url="${salesforce.url}" doc:name="Salesforce">
         <sfdc:connection-pooling-profile initialisationPolicy="INITIALISE_ONE" exhaustedAction="WHEN_EXHAUSTED_GROW"/>
     </sfdc:config>
-    <http:request-config name="SEED_API" protocol="HTTPS" host="${SEED.url}" port="443" basePath="/api/v2" doc:name="HTTP Request Configuration">
+    <http:request-config name="SEED_API" protocol="${SEED.protocol}" host="${SEED.url}" port="${SEED.port}" basePath="/api/v2" doc:name="HTTP Request Configuration">
         <http:basic-authentication username="${SEED.user}" password="${SEED.apikey}" preemptive="true"/>
     </http:request-config>
 
