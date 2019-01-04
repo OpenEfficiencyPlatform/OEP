@@ -15,5 +15,6 @@ It includes the OEP Benchmark Implementation Guide and OEP User Guide.
 # TODO
 
 * Remove spaces from directory names. It can cause some trivial issues with Docker
+Add Docker instructions to Benchmark Implementation Guide
 
 
