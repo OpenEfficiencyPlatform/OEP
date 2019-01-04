@@ -3,7 +3,7 @@
 set -e
 
 IMAGETAG=skip
-if [ "${TRAVIS_BRANCH}" == "develop" ]; then
+if [ "${TRAVIS_BRANCH}" == "Dev" ]; then
     IMAGETAG=develop
 elif [ "${TRAVIS_BRANCH}" == "master" ]; then
     # Retrieve the version number from the OEI/pom.xml file
