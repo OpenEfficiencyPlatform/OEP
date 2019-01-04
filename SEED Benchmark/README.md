@@ -20,5 +20,6 @@ The preferred method of deployment is to use docker and docker stack deploy. The
 # TODO
 
 * Remove spaces from directory names. It can cause some trivial issues with Docker
+Add Docker instructions to Benchmark Implementation Guide
 
 
