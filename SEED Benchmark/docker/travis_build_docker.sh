@@ -20,5 +20,5 @@ if [ "${IMAGETAG}" != "skip" ] && [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
     docker tag seedplatform/oep seedplatform/oep:$IMAGETAG
     docker push seedplatform/oep:$IMAGETAG
 else
-    echo "Not on a deployable branch, this is a pull request or not on the correct branch"
+    echo "Not on a deployable branch, this is either a pull request or on a non-active branch"
 fi
