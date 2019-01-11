@@ -3,7 +3,7 @@
 set -e
 
 IMAGETAG=skip
-if [ "${TRAVIS_BRANCH}" == "develop" ]; then
+if [ "${TRAVIS_BRANCH}" == "Dev" ]; then
     IMAGETAG=develop
 elif [ "${TRAVIS_BRANCH}" == "master" ]; then
     # Retrieve the version number from the OEI/pom.xml file
@@ -20,5 +20,5 @@ if [ "${IMAGETAG}" != "skip" ] && [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
     docker tag seedplatform/oep seedplatform/oep:$IMAGETAG
     docker push seedplatform/oep:$IMAGETAG
 else
-    echo "Not on a deployable branch, this is a pull request or not on the correct branch"
+    echo "Not on a deployable branch, this is either a pull request or on a non-active branch"
 fi

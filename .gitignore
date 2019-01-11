@@ -1,4 +1,3 @@
 .idea
-/SEED Benchmark/conf/*/*.properties
-/SEED Benchmark/conf/*/*.conf
+/SEED Benchmark/docker-compose.*.yml
 ~$*.docx
