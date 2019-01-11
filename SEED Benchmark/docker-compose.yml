@@ -1,0 +1,28 @@
+# Example configuration of a docker compose file for deploying the OEI stack
+# Make sure to set the environment variables!
+
+version: '3'
+services:
+  oep-city-1:
+    build: .
+    image: seedplatform/oep
+    environment:
+      - SEED_USER
+      - SEED_APIKEY
+      - SEED_PROTOCOL=HTTPS
+      - SEED_URL
+      - SEED_PORT
+      - OEP_CRON_TIMER=0 0/60 * ? * * *
+      - SALESFORCE_URL=https://test.salesforce.com/services/Soap/u/37.0
+      - SALESFORCE_USER
+      - SALESFORCE_PASSWORD
+      - SALESFORCE_TOKEN
+      - SALESFORCE_ACCOUNT_TYPE=01236000000SWE1AAO
+      - SMTP_SEND_ERRORS=false
+      - SMTP_SUBJECT=Error log for SEED to Salesforce Mule process
+      - SMTP_USER
+      - SMTP_RECIPIENT
+      - SMTP_INTERNAL
+      - SMTP_SENDER
+      - SMTP_HOST
+      - SMTP_PASSWORD
