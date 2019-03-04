@@ -61,7 +61,11 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
     </flow>
     <sub-flow name="GetPropertyDetailsFromSEED">
         <set-variable variableName="PropertyId" value="#[payload]" doc:name="Variable: SEED Property Id"/>
-        <http:request config-ref="SEED_API" path="/properties/#[payload]/?organization_id=#[flowVars.organization_id]" method="GET" doc:name="HTTP: Call for Details"/>
+        <http:request config-ref="SEED_API" path="/properties/#[payload]/?organization_id=#[flowVars.organization_id]" method="GET" doc:name="HTTP: Call for Details">
+		<http:request-builder>
+                <http:header headerName="Content-Type" value="application/json"/>
+            </http:request-builder>
+	</http:request>
         <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
         <set-variable variableName="PropertyDetails" value="#[payload]" doc:name="Variable: Property Details"/>
         <set-variable variableName="updatedDate" value="#[flowVars.PropertyDetails.property.updated]" doc:name="Variable: Get Updated Date"/>
