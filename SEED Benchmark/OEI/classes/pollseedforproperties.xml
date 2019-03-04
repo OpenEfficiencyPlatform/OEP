@@ -17,7 +17,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 
     <flow name="pollseedforpropertiesFlow">
         <poll doc:name="Poll">
-            <schedulers:cron-scheduler expression="${cron.timer}"/>
+            <fixed-frequency-scheduler frequency="10" timeUnit="MINUTES"/>
             <http:request config-ref="SEED_API" path="/organizations" method="GET" doc:name="HTTP: GET organization id"/>
 
         </poll>
@@ -48,7 +48,11 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
         </catch-exception-strategy>
     </flow>
     <flow name="getpropertiesfororg" processingStrategy="synchronous">
-        <http:request config-ref="SEED_API" path="/labels/filter/?inventory_type=property&amp;organization_id=#[flowVars.organization_id]" method="POST" doc:name="HTTP: Get all labels for my organization"/>
+        <http:request config-ref="SEED_API" path="/labels/filter/?inventory_type=property&amp;organization_id=#[flowVars.organization_id]" method="POST" doc:name="HTTP: Get all labels for my organization">
+            <http:request-builder>
+                <http:header headerName="Content-Type" value="application/json"/>
+            </http:request-builder>
+        </http:request>
         <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
         <scripting:transformer doc:name="Groovy: only look at properties with the 'Add to Salesforce' Label">
             <scripting:script engine="Groovy"><![CDATA[return payload.find { it.name == flowVars.IndicationLabel }]]></scripting:script>
