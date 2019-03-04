@@ -3,7 +3,7 @@
 <mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
 	xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp"
 	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:spring="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
 http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
@@ -15,7 +15,7 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
             	<set-payload value="#[flowVars.ErrorLog]" doc:name="Set Payload: capture exception" doc:description="Set the payload to the exception details for processing"/>
 
 			<logger message="Current Payload: #[payload]" level="INFO" doc:name="Logger: Capture payload" doc:description="Log the details"/>
-        <smtp:outbound-endpoint host="${email.host}" user="${email.user}" password="${email.password}" to="${email.recipient}, ${email.internal}" from="${email.sender}" subject="${email.subject}" responseTimeout="10000" doc:name="SMTP: Outbound email exception" doc:description="Mail the exception which has been caught and logged to a configured recipient"/>
+        <smtps:outbound-endpoint host="${email.host}" user="${email.user}" password="${email.password}" to="${email.recipient}, ${email.internal}" from="${email.sender}" subject="${email.subject}" port="465" responseTimeout="10000" doc:name="SMTP: Outbound email exception" doc:description="Mail the exception which has been caught and logged to a configured recipient"/>
 	</flow>
 
 </mule>
