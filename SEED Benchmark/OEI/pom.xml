@@ -5,8 +5,7 @@
 	<groupId>com.psd</groupId>
 	<artifactId>oei</artifactId>
 	<packaging>mule</packaging>
-	<version>1.0.0-SNAPSHOT</version>
-
+	<version>1.1</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -20,9 +19,9 @@
 	</properties>
 
 	<build>
-		<!-- Use a newer version of the install plugin than what your Maven uses 
-			by default. The older version failed to install the project if there was 
-			no target/classes folder. Since we use mule packaging on the project we actually 
+		<!-- Use a newer version of the install plugin than what your Maven uses
+			by default. The older version failed to install the project if there was
+			no target/classes folder. Since we use mule packaging on the project we actually
 			create and attach the zip that must be installed. -->
 		<pluginManagement>
 			<plugins>
@@ -31,7 +30,7 @@
 					<artifactId>maven-install-plugin</artifactId>
 					<version>2.3.1</version>
 				</plugin>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -308,7 +307,7 @@
 			<version>${mule.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<!-- Mule Modules -->
 		<dependency>
 			<groupId>org.mule.modules</groupId>
