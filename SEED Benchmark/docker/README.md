@@ -37,8 +37,10 @@ The configuration is setup entirely with environment variables to enable easy de
     * *SMTP_INTERNAL:* Internal (to the company) to whom a copy of the email is sent.
     * *SMTP_SENDER:* The name of the person sending the email.
     * *SMTP_SUBJECT:* Subject of the sent email message.
-    * *SMTP_HOST:* SMTP host domain (e.g. `smtp.google.com`).
+    * *SMTP_HOST:* SMTP host domain (e.g. `smtp.gmail.com`).
     * *SMTP_PASSWORD:* Password for SMTP host.
+    * *SMTP_PORT:* SMTP Port (e.g., 25, 465, 587) 
+    * *SMTP_SECURE:* *Optional*, Use TLS. Note if using gmail, then this must be true.
     
 If the environment variables are not set inside the containter, then the application will report an error and fail to launch. 
 
@@ -110,6 +112,8 @@ services:
       - SMTP_SENDER
       - SMTP_HOST
       - SMTP_PASSWORD
+      - SMTP_PORT
+      - SMTP_SECURE
   oep-city-2:
     build: .
     image: seedplatform/oep
@@ -133,4 +137,6 @@ services:
       - SMTP_SENDER
       - SMTP_HOST
       - SMTP_PASSWORD
+      - SMTP_PORT
+      - SMTP_SECURE
 ```
