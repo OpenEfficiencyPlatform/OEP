@@ -100,6 +100,16 @@ if [ ${SMTP_SEND_ERRORS} == "true" ]; then
         echo "SMTP_PASSWORD is not set and is required"
         exit 1
     fi
+
+    if [ -z ${SMTP_PORT+x} ]; then
+        echo "SMTP_PORT is not set and is required"
+        exit 1
+    fi
+
+    if [ -z ${SMTP_SECURE+x} ]; then
+        echo "SMTP_SECURE is not set, defaulting to false"
+        export SMTP_SECURE=false
+    fi
 else
     # If not using SMTP, then set the env vars to random values. This is needed since
     # mule requires them to exist (even if not used)
@@ -111,6 +121,8 @@ else
     export SMTP_SENDER=UNUSED
     export SMTP_HOST=UNUSED
     export SMTP_PASSWORD=UNUSED
+    export SMTP_PORT=UNUSED
+    export SMTP_SECURE=UNUSED
 fi
 
 /opt/mule/bin/mule
