@@ -2,7 +2,7 @@
 
 <mule xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
 	xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
@@ -17,6 +17,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 
     <flow name="pollseedforpropertiesFlow">
         <poll doc:name="Poll">
+
             <schedulers:cron-scheduler expression="${cron.timer}"/>
             <http:request config-ref="SEED_API" path="/organizations" method="GET" doc:name="HTTP: GET organization id"/>
 
@@ -49,6 +50,8 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
     </flow>
     <flow name="getpropertiesfororg" processingStrategy="synchronous">
         <http:request config-ref="SEED_API" path="/labels/filter/?inventory_type=property&amp;organization_id=#[flowVars.organization_id]" method="POST" doc:name="HTTP: Get all labels for my organization"/>
+
+
         <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
         <scripting:transformer doc:name="Groovy: only look at properties with the 'Add to Salesforce' Label">
             <scripting:script engine="Groovy"><![CDATA[return payload.find { it.name == flowVars.IndicationLabel }]]></scripting:script>
@@ -61,30 +64,27 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
     </flow>
     <sub-flow name="GetPropertyDetailsFromSEED">
         <set-variable variableName="PropertyId" value="#[payload]" doc:name="Variable: SEED Property Id"/>
-        <http:request config-ref="SEED_API" path="/properties/#[payload]/?organization_id=#[flowVars.organization_id]" method="GET" doc:name="HTTP: Call for Details">
-		<http:request-builder>
-                <http:header headerName="Content-Type" value="application/json"/>
-            </http:request-builder>
-	</http:request>
+        <http:request config-ref="SEED_API" path="/properties/#[payload]/?organization_id=#[flowVars.organization_id]" method="GET" doc:name="HTTP: Call for Details"/>
         <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
         <set-variable variableName="PropertyDetails" value="#[payload]" doc:name="Variable: Property Details"/>
+        <set-variable variableName="PropertyName" value="#[flowVars.PropertyDetails.state.property_name]" doc:name="Variable: SEED Property Name"/>
         <set-variable variableName="updatedDate" value="#[flowVars.PropertyDetails.property.updated]" doc:name="Variable: Get Updated Date"/>
         <scripting:component doc:name="Groovy: get the last processed dates for comparison ">
-            <scripting:script engine="Groovy"><![CDATA[import java.util.GregorianCalendar;
-import java.util.Calendar;
-import java.util.Date;
+            <scripting:script engine="Groovy"><![CDATA[import java.util.GregorianCalendar; 
+import java.util.Calendar; 
+import java.util.Date; 
 import java.text.SimpleDateFormat
 def file = new File('/tmp/lastReadDate.txt');
 String fileContents = file.exists() ? file.text : '2001-01-01 12:00:00.000';
 SimpleDateFormat sdf = new SimpleDateFormat('yyyy-MM-dd HH:mm:ss.SSS');
 Date date = sdf.parse(fileContents);
-Calendar c = Calendar.getInstance();
-c.setTime(date);
+Calendar c = Calendar.getInstance(); 
+c.setTime(date); 
 c.add(Calendar.DATE, -1);
 Date seedUpdatedDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", flowVars.updatedDate);
 Date seedDate = sdf.parse(seedUpdatedDate.format('yyyy-MM-dd HH:mm:ss.SSS'));
 message.setInvocationProperty('seedDate', seedDate);
-return sdf.parse(sdf.format(c.getTime()));
+return sdf.parse(sdf.format(c.getTime())); 
 ]]></scripting:script>
         </scripting:component>
         <expression-filter expression="#[flowVars.seedDate &gt; payload]" doc:name="Expression: Filter anything not recently updated"/>
@@ -122,9 +122,10 @@ return sdf.parse(sdf.format(c.getTime()));
         </choice>
     </sub-flow>
     <sub-flow name="QuerySFforContactAndAccount">
-        <set-variable variableName="contactEmail" value="#[flowVars.PropertyDetails.state.extra_data[&quot;Email&quot;]]" doc:name="Variable: Contact Email useful for getting SF Account"/>
+        <set-variable variableName="contactEmail" value="#[flowVars.PropertyDetails.state.extra_data[&quot;Email&quot;].trim()]" doc:name="Variable: Contact Email useful for getting SF Account"/>
         <set-variable variableName="ContactName" value="#[flowVars.PropertyDetails.state.extra_data[&quot;On Behalf Of&quot;]]" doc:name="Variable: Contact Name"/>
-        <set-payload value=" #[flowVars.PropertyDetails.state.extra_data.Email]" doc:name="Set Payload"/>
+        <set-payload value=" #[flowVars.PropertyDetails.state.extra_data.Email.trim()]" doc:name="Set Payload"/>
+
         <sfdc:query-single config-ref="Testbed-Salesforce" query="Select Id, Email, Account.Name from Contact where Email = '#[flowVars.contactEmail]'" doc:name="Salesforce: Call for Contact and Account details"/>
         <choice doc:name="Choice">
             <when expression="#[payload != null]">
@@ -135,8 +136,8 @@ return sdf.parse(sdf.format(c.getTime()));
             </otherwise>
         </choice>
     </sub-flow>
-    <sub-flow name="CreateContactAndAccount">
-        <set-variable variableName="AccountName" value="#[flowVars.PropertyDetails.state.extra_data[&quot;Organization&quot;]]" doc:name="Variable: SF Account Name"/>
+    <flow name="CreateContactAndAccount">
+        <set-variable variableName="AccountName" value="#[flowVars.PropertyDetails.state.extra_data[&quot;Organization&quot;].trim()]" doc:name="Variable: SF Account Name"/>
         <sfdc:query-single config-ref="Testbed-Salesforce" query="Select Id from Account where Name = '#[flowVars.AccountName]'" doc:name="Salesforce: Get Account if available"/>
         <choice doc:name="Choice">
             <when expression="#[payload != null]">
@@ -151,7 +152,14 @@ return sdf.parse(sdf.format(c.getTime()));
                 <sfdc:create config-ref="Testbed-Salesforce" type="Account" doc:name="Salesforce: Create a new Account">
                     <sfdc:objects ref="#[payload]"/>
                 </sfdc:create>
-                <set-variable variableName="SFAccountId" value="#[payload[0].id]" doc:name="Variable: Set the SF Account ID"/>
+               <choice doc:name="Choice">
+                    <when expression="#[payload[0].success == 'false']">
+                        <logger message="#['Error: ' +  payload]" level="INFO" doc:name="Logger"/>
+                    </when>
+                    <otherwise>
+                        <set-variable variableName="SFAccountId" value="#[payload[0].id]" doc:name="Variable: Set the SF Account ID"/>
+                    </otherwise>
+                </choice>
             </otherwise>
         </choice>
         <scripting:transformer doc:name="Groovy: map fields to new Contact">
@@ -161,7 +169,12 @@ return sdf.parse(sdf.format(c.getTime()));
             <sfdc:objects ref="#[payload]"/>
         </sfdc:create>
         <set-variable variableName="ContactResults" value="#[payload[0].id]" doc:name="Variable: Save the SF Contact Id"/>
-    </sub-flow>
+		 <catch-exception-strategy doc:name="pollseedforpropertiesCatch_Exception_Strategy">
+            <set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;\n \n [Error1] Salesforce Account: '&quot; + flowVars.AccountName + &quot;' with Salesforce Contact email: '&quot; + flowVars.contactEmail + &quot;' aren't already objects in Salesforce but could not be created due to:  ==&gt; &quot; +exception.cause.?message or exception.cause]" doc:name="Variable"/>
+            <set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;.  \n As a result the SEED property named: [(&quot;  + flowVars.PropertyName + &quot;),  Seed ID: (&quot; + flowVars.PropertyId + &quot;)] will not be updated in Salesforce until the issue is resolved&quot;]" doc:name="Variable"/>
+        </catch-exception-strategy>
+    </flow>
+
     <sub-flow name="PushPropertytoSalesforce">
         <choice doc:name="Choice">
             <when expression="#[flowVars.IsInViolation]">
@@ -169,8 +182,7 @@ return sdf.parse(sdf.format(c.getTime()));
                     <scripting:script engine="Groovy"><![CDATA[def property = flowVars["PropertyDetails"].state;
 def propData = property.extra_data;
 message.setInvocationProperty('SFPremiseId', propData["Benchmark Salesforce ID"]);
-
-Property =
+Property = 
 [
 	Id: propData["Benchmark Salesforce ID"],
 	oei__Contact_Name__c: flowVars["ContactResults"],
