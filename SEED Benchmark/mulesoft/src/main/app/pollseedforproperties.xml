@@ -175,9 +175,9 @@ return sdf.parse(sdf.format(c.getTime()));
             <sfdc:objects ref="#[payload]"/>
         </sfdc:create>
         <set-variable variableName="ContactResults" value="#[payload[0].id]" doc:name="Variable: Save the SF Contact Id"/>
-		 <catch-exception-strategy doc:name="pollseedforpropertiesCatch_Exception_Strategy">
-            <set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;\n \n [Error1] Salesforce Account: '&quot; + flowVars.AccountName + &quot;' with Salesforce Contact email: '&quot; + flowVars.contactEmail + &quot;' aren't already objects in Salesforce but could not be created due to:  ==&gt; &quot; +exception.cause.?message or exception.cause]" doc:name="Variable"/>
-            <set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;.  \n As a result the SEED property named: [(&quot;  + flowVars.PropertyName + &quot;),  Seed ID: (&quot; + flowVars.PropertyId + &quot;)] will not be updated in Salesforce until the issue is resolved&quot;]" doc:name="Variable"/>
+	<catch-exception-strategy doc:name="pollseedforpropertiesCatch_Exception_Strategy">
+            <set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;\n \n [Error4] Salesforce Account: '&quot; + flowVars.AccountName + &quot;' with Salesforce Contact email: '&quot; + flowVars.contactEmail + &quot;' aren't already objects in Salesforce but could not be created due to:  ==&gt; &quot; +exception.cause.?message or exception.cause]" doc:name="Variable"/>
+            <set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;.  \n As a result the SEED property named: [(&quot;  + flowVars.PropertyName + &quot;),  Seed ID: (&quot; + flowVars.PropertyId + &quot;)] will not be updated in Salesforce until the issue is resolved.  Confirm that the SEED 'Organization' field&#160;has an exact match with the Salesforce 'Account Name'. If they do not match then update one so that they do.&quot;]" doc:name="Variable"/>
         </catch-exception-strategy>
     </flow>
 
