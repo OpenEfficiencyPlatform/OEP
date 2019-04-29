@@ -75,9 +75,17 @@ Docker-compose nicely encapsulates attached volumes, environment variables, and 
 
 1. Copy over the docker-compose.yml file to a newly created and named local file (e.g. docker-compose.city-sf.yml). 
 
-2. Set the environment variables for the city as needed. 
+2. Set the environment variables for the city as needed.
 
-3. Build the container and launch
+3. (Optional) It is possible to store the "lastReadDate.txt" file on the main server to prevent the rescanning of the entire project upon updating the container. To persist the file, then create the file locally with the following script (note that the location of the file should be based on the city microservice being launched):
+
+    ```bash
+    cd <project-root>
+    mkdir oep/city-1
+    echo "2000-01-01 00:00:00.000" > oep/city-1/lastReadDate.txt 
+    ```
+
+4. Build the container and launch
 
     ```bash
     docker-compose -f docker-compose.city-sf.yml build
@@ -114,6 +122,8 @@ services:
       - SMTP_PASSWORD
       - SMTP_PORT
       - SMTP_SECURE
+    #volumes:
+    #  - $PWD/oep/city-1/lastReadDate.txt:/tmp/oep/lastReadDate.txt
   oep-city-2:
     build: .
     image: seedplatform/oep

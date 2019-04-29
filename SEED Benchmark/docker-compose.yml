@@ -26,3 +26,6 @@ services:
       - SMTP_SENDER
       - SMTP_HOST
       - SMTP_PASSWORD
+    # Read the information in docker/README.md on deploying with persisted lastReadDate.txt
+    #volumes:
+    #  - $PWD/oep/city-1/lastReadDate.txt:/tmp/oep/lastReadDate.txt
