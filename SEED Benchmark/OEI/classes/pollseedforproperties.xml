@@ -41,7 +41,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
         <scripting:component doc:name="Groovy: write date processed to local file">
             <scripting:script engine="Groovy"><![CDATA[return new Date().format('yyyy-MM-dd HH:mm:ss.SSS');]]></scripting:script>
         </scripting:component>
-        <file:outbound-endpoint path="/tmp" outputPattern="lastReadDate.txt" responseTimeout="10000" doc:name="File"/>
+        <file:outbound-endpoint path="/tmp/oep" outputPattern="lastReadDate.txt" responseTimeout="10000" doc:name="File"/>
         <catch-exception-strategy doc:name="Catch Exception Strategy" doc:description="Exception handling for the C2M listener">
             <set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;\n \n [Info1] &quot; + exception.getEvent() + &quot;with the following details: \n&quot; + exception.getCauseException()]" doc:name="Variable: Update Error Log"/>
             <flow-ref name="ErrorHandler" doc:name="ErrorHandler"/>
@@ -71,7 +71,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.text.SimpleDateFormat
 
-def file = new File('/tmp/lastReadDate.txt');
+def file = new File('/tmp/oep/lastReadDate.txt');
 String fileContents = file.exists() ? file.text : '2001-01-01 12:00:00.000';
 
 SimpleDateFormat sdf = new SimpleDateFormat('yyyy-MM-dd HH:mm:ss.SSS');

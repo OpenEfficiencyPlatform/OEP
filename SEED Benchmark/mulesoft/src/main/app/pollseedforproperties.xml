@@ -2,7 +2,7 @@
 
 <mule xmlns:schedulers="http://www.mulesoft.org/schema/mule/schedulers" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
 	xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:spring="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
@@ -42,7 +42,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
         <scripting:component doc:name="Groovy: write date processed to local file">
             <scripting:script engine="Groovy"><![CDATA[return new Date().format('yyyy-MM-dd HH:mm:ss.SSS');]]></scripting:script>
         </scripting:component>
-        <file:outbound-endpoint path="/tmp" outputPattern="lastReadDate.txt" responseTimeout="10000" doc:name="File"/>
+        <file:outbound-endpoint path="/tmp/oep" outputPattern="lastReadDate.txt" responseTimeout="10000" doc:name="File"/>
         <catch-exception-strategy doc:name="Catch Exception Strategy" doc:description="Exception handling for the C2M listener">
             <set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;\n \n [Info1] &quot; + exception.getEvent() + &quot;with the following details: \n&quot; + exception.getCauseException()]" doc:name="Variable: Update Error Log"/>
             <flow-ref name="ErrorHandler" doc:name="ErrorHandler"/>
@@ -70,25 +70,25 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
         <set-variable variableName="PropertyName" value="#[flowVars.PropertyDetails.state.property_name]" doc:name="Variable: SEED Property Name"/>
         <set-variable variableName="updatedDate" value="#[flowVars.PropertyDetails.property.updated]" doc:name="Variable: Get Updated Date"/>
         <scripting:component doc:name="Groovy: get the last processed dates for comparison ">
-            <scripting:script engine="Groovy"><![CDATA[import java.util.GregorianCalendar; 
-import java.util.Calendar; 
-import java.util.Date; 
+            <scripting:script engine="Groovy"><![CDATA[import java.util.GregorianCalendar;
+import java.util.Calendar;
+import java.util.Date;
 import java.text.SimpleDateFormat
 
-def file = new File('/tmp/lastReadDate.txt');
+def file = new File('/tmp/oep/lastReadDate.txt');
 String fileContents = file.exists() ? file.text : '2001-01-01 12:00:00.000';
 
 SimpleDateFormat sdf = new SimpleDateFormat('yyyy-MM-dd HH:mm:ss.SSS');
 Date date = sdf.parse(fileContents);
-Calendar c = Calendar.getInstance(); 
-c.setTime(date); 
+Calendar c = Calendar.getInstance();
+c.setTime(date);
 c.add(Calendar.DATE, -1);
 
 Date seedUpdatedDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", flowVars.updatedDate);
 Date seedDate = sdf.parse(seedUpdatedDate.format('yyyy-MM-dd HH:mm:ss.SSS'));
 message.setInvocationProperty('seedDate', seedDate);
 
-return sdf.parse(sdf.format(c.getTime())); 
+return sdf.parse(sdf.format(c.getTime()));
 
 
 ]]></scripting:script>
@@ -190,7 +190,7 @@ def propData = property.extra_data;
 
 message.setInvocationProperty('SFPremiseId', propData["Benchmark Salesforce ID"]);
 
-Property = 
+Property =
 [
 	Id: propData["Benchmark Salesforce ID"],
 	oei__Contact_Name__c: flowVars["ContactResults"],
