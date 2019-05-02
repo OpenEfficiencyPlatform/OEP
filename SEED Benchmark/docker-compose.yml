@@ -12,7 +12,7 @@ services:
       - SEED_PROTOCOL=HTTPS
       - SEED_URL
       - SEED_PORT
-      - OEP_CRON_TIMER=0 0/60 * ? * * *
+      - OEP_CRON_TIMER=0 0 0/1 ? * * *
       - SALESFORCE_URL=https://test.salesforce.com/services/Soap/u/37.0
       - SALESFORCE_USER
       - SALESFORCE_PASSWORD
