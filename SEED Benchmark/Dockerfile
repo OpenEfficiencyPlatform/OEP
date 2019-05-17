@@ -1,7 +1,7 @@
 # AUTHOR:           Nicholas Long <nicholas.long@nrel.gov>
 # DESCRIPTION:      Mulesoft container with OEI application for connecting SEED to Salesforce
 
-FROM java:openjdk-8-jdk
+FROM openjdk:8-jdk
 MAINTAINER nicholas.long@nrel.gov
 
 ENV MULE_VERSION 3.8.0

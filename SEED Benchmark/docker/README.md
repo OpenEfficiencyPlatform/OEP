@@ -24,8 +24,8 @@ The configuration is setup entirely with environment variables to enable easy de
 * *SEED_URL:* URL of the hosted SEED instance (without http(s)://).
 * *SEED_PORT:* Port of the hosted SEED instance (typically 443).
 * *OEP_CRON_TIMER:* Interval to check for updated data. 
-    * Default is every hour: `0 0/60 * ? * * *`
-    * Trigger every minute for debugging: `0 0/1 * ? * * *`
+    * Default is every hour: `0 0 0/1 ? * * *`
+    * Trigger every minute for debugging: `0 0/1 0 ? * * *`
 * *SALESFORCE_URL:* URL for Salesforce (with http(s)://).
 * *SALESFORCE_USER:* Salesforce user.
 * *SALESFORCE_PASSWORD:* Salesforce password.
@@ -75,9 +75,17 @@ Docker-compose nicely encapsulates attached volumes, environment variables, and 
 
 1. Copy over the docker-compose.yml file to a newly created and named local file (e.g. docker-compose.city-sf.yml). 
 
-2. Set the environment variables for the city as needed. 
+2. Set the environment variables for the city as needed.
 
-3. Build the container and launch
+3. (Optional) It is possible to store the "lastReadDate.txt" file on the main server to prevent the rescanning of the entire project upon updating the container. To persist the file, then create the file locally with the following script (note that the location of the file should be based on the city microservice being launched):
+
+    ```bash
+    cd <project-root>
+    mkdir oep/city-1
+    echo "2000-01-01 00:00:00.000" > oep/city-1/lastReadDate.txt 
+    ```
+
+4. Build the container and launch
 
     ```bash
     docker-compose -f docker-compose.city-sf.yml build
@@ -98,7 +106,7 @@ services:
       - SEED_PROTOCOL=HTTPS
       - SEED_URL
       - SEED_PORT
-      - OEP_CRON_TIMER=0 0/60 * ? * * *
+      - OEP_CRON_TIMER=0 0 0/1 ? * * *
       - SALESFORCE_URL=https://test.salesforce.com/services/Soap/u/37.0
       - SALESFORCE_USER
       - SALESFORCE_PASSWORD
@@ -114,6 +122,8 @@ services:
       - SMTP_PASSWORD
       - SMTP_PORT
       - SMTP_SECURE
+    #volumes:
+    #  - $PWD/oep/city-1/lastReadDate.txt:/tmp/oep/lastReadDate.txt
   oep-city-2:
     build: .
     image: seedplatform/oep
@@ -123,7 +133,7 @@ services:
       - SEED_PROTOCOL=HTTPS
       - SEED_URL
       - SEED_PORT
-      - OEP_CRON_TIMER=0 0/60 * ? * * *
+      - OEP_CRON_TIMER=0 0 0/1 ? * * *
       - SALESFORCE_URL=https://test.salesforce.com/services/Soap/u/37.0
       - SALESFORCE_USER
       - SALESFORCE_PASSWORD
