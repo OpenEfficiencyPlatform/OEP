@@ -62,7 +62,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 		</foreach>
 
     </flow>
-    <sub-flow name="GetPropertyDetailsFromSEED">
+      <flow name="GetPropertyDetailsFromSEED">
         <set-variable variableName="PropertyId" value="#[payload]" doc:name="Variable: SEED Property Id"/>
         <http:request config-ref="SEED_API" path="/properties/#[payload]/?organization_id=#[flowVars.organization_id]" method="GET" doc:name="HTTP: Call for Details"/>
         <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
@@ -74,17 +74,23 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 import java.util.Calendar; 
 import java.util.Date; 
 import java.text.SimpleDateFormat
+
 def file = new File('/tmp/lastReadDate.txt');
 String fileContents = file.exists() ? file.text : '2001-01-01 12:00:00.000';
+
 SimpleDateFormat sdf = new SimpleDateFormat('yyyy-MM-dd HH:mm:ss.SSS');
 Date date = sdf.parse(fileContents);
 Calendar c = Calendar.getInstance(); 
 c.setTime(date); 
 c.add(Calendar.DATE, -1);
+
 Date seedUpdatedDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", flowVars.updatedDate);
 Date seedDate = sdf.parse(seedUpdatedDate.format('yyyy-MM-dd HH:mm:ss.SSS'));
 message.setInvocationProperty('seedDate', seedDate);
+
 return sdf.parse(sdf.format(c.getTime())); 
+
+
 ]]></scripting:script>
         </scripting:component>
         <expression-filter expression="#[flowVars.seedDate &gt; payload]" doc:name="Expression: Filter anything not recently updated"/>
@@ -93,9 +99,10 @@ return sdf.parse(sdf.format(c.getTime()));
         <set-payload value=" #[flowVars.PropertyDetails.property.labels]" mimeType="application/json" doc:name="Set Payload"/>
         <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
         <foreach doc:name="For Each">
+            <set-variable variableName="LabelID" value="#[payload]" doc:name="Variable"/>
             <http:request config-ref="SEED_API" path="/labels/#[payload]" method="GET" doc:name="HTTP: Get label name"/>
             <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
-            <expression-transformer expression="#[flowVars.labelNames.add(payload.name)]" doc:name="Expression: Add the label name to the collection"/>
+            <expression-transformer expression="#[payload != null ? flowVars.labelNames.add(payload.name) : flowVars.labelNames ]" doc:name="Expression: Add the label name to the collection"/>
         </foreach>
         <set-variable variableName="ViolationStatus" value="${SEED.ViolationLabel}" doc:name="Variable: Set Violation Text"/>
         <set-variable variableName="CompliedStatus" value="${SEED.CompliedLabel}" doc:name="Variable: Set Complied Text"/>
@@ -120,7 +127,11 @@ return sdf.parse(sdf.format(c.getTime()));
                 <set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;\n \n [Error1] SEED property: &quot; + flowVars.PropertyDetails.state.property_name + &quot;, SEED Id: &quot; + flowVars.PropertyId + &quot;. Neither '&quot; + flowVars.CompliedStatus + &quot;' or '&quot; + flowVars.ViolationStatus + &quot;' labels have been applied to this property so no action will be taken.&quot; ]" doc:name="Variable: Error Log"/>
             </otherwise>
         </choice>
-    </sub-flow>
+          <catch-exception-strategy doc:name="pollseedforpropertiesCatch_Exception_Strategy">
+            <set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;\n \n [Error4] SEED Label: '&quot; + flowVars.LabelID + &quot;' assigned to Property: &quot; + flowVars.PropertyName + &quot; has no details in SEED. &quot;]" doc:name="Variable"/>
+			<set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;.  \n As a result the SEED property named: [(&quot;  + flowVars.PropertyName + &quot;),  Seed ID: (&quot; + flowVars.PropertyId + &quot;)] will not be updated in Salesforce until the issue is resolved.  Confirm that the unavailable SEED label is removed from this property.&quot;]" doc:name="Variable"/>
+        </catch-exception-strategy>
+    </flow>
     <sub-flow name="QuerySFforContactAndAccount">
         <set-variable variableName="contactEmail" value="#[flowVars.PropertyDetails.state.extra_data[&quot;Email&quot;].trim()]" doc:name="Variable: Contact Email useful for getting SF Account"/>
         <set-variable variableName="ContactName" value="#[flowVars.PropertyDetails.state.extra_data[&quot;On Behalf Of&quot;]]" doc:name="Variable: Contact Name"/>
