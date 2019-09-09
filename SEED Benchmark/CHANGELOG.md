@@ -1,5 +1,12 @@
 # OEP / SEED Benchmark
 
+## 1.3
+
+**Note that this version will not work with SEED < 2.6**
+* Update SEED label endpoint to access property_view in SEED Version 2.6. SEED recently updated the backend database relationship of labels to be attached to property views and not properties.
+* Enhanced logging of SEED calls to better track down potential errors/issues.
+
+
 ## 1.2
 
 * Better logging when there are duplicates in Salesforce
