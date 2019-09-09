@@ -49,7 +49,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
         </catch-exception-strategy>
     </flow>
     <flow name="getpropertiesfororg" processingStrategy="synchronous">
-        <http:request config-ref="SEED_API" path="/labels/filter/?inventory_type=property&amp;organization_id=#[flowVars.organization_id]" method="POST" doc:name="HTTP: Get all labels for my organization"/>
+        <http:request config-ref="SEED_API" path="/labels/filter/?inventory_type=property_view&amp;organization_id=#[flowVars.organization_id]" method="POST" doc:name="HTTP: Get all labels for my organization"/>
 
 
         <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
@@ -85,7 +85,7 @@ c.add(Calendar.DATE, -1);
 Date seedUpdatedDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", flowVars.updatedDate);
 Date seedDate = sdf.parse(seedUpdatedDate.format('yyyy-MM-dd HH:mm:ss.SSS'));
 message.setInvocationProperty('seedDate', seedDate);
-return sdf.parse(sdf.format(c.getTime())); 
+return sdf.parse(sdf.format(c.getTime()));
 ]]></scripting:script>
         </scripting:component>
         <expression-filter expression="#[flowVars.seedDate &gt; payload]" doc:name="Expression: Filter anything not recently updated"/>
