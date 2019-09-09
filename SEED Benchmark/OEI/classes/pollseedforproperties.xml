@@ -17,7 +17,7 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 
     <flow name="pollseedforpropertiesFlow">
         <poll doc:name="Poll">
-            <fixed-frequency-scheduler frequency="10" timeUnit="MINUTES"/>
+            <schedulers:cron-scheduler expression="${cron.timer}"/>
             <http:request config-ref="SEED_API" path="/organizations" method="GET" doc:name="HTTP: GET organization id"/>
 
         </poll>
