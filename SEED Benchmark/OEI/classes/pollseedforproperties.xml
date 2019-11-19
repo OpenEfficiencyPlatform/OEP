@@ -98,7 +98,7 @@ return sdf.parse(sdf.format(c.getTime()));
         <expression-filter expression="#[flowVars.seedDate &gt; payload]" doc:name="Expression: Filter anything not recently updated"/>
         <logger message="Getting details for labels from Property: #[flowVars.PropertyDetails.property.id]" level="INFO" doc:name="Logger"/>
         <set-variable variableName="labelNames" value="#[[]]" doc:name="Variable: Array of Label Names"/>
-        <set-payload value=" #[flowVars.PropertyDetails.property.labels]" mimeType="application/json" doc:name="Set Payload"/>
+        <set-payload value=" #[flowVars.PropertyDetails.labels]" mimeType="application/json" doc:name="Set Payload"/>
         <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
         <foreach doc:name="For Each">
             <set-variable variableName="LabelID" value="#[payload]" doc:name="Variable"/>
