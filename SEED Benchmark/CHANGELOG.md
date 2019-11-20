@@ -1,5 +1,9 @@
 # OEP / SEED Benchmark
 
+## 1.4
+
+* Labels on the property details were not moved. This supports the labels on PropertyDetails instead of PropertyDetails.property. 
+
 ## 1.3
 
 **Note that this version will not work with SEED < 2.6**
