@@ -3,6 +3,7 @@
 ## 1.4
 
 * Labels on the property details were not moved. This supports the labels on PropertyDetails instead of PropertyDetails.property. 
+* Remove old unused copy of various files
 
 ## 1.3
 
