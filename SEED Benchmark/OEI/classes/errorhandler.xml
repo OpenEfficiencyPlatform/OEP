@@ -3,7 +3,7 @@
 <mule xmlns:smtps="http://www.mulesoft.org/schema/mule/smtps" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
 	xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp"
 	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:spring="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
 http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
@@ -25,7 +25,5 @@ http://www.mulesoft.org/schema/mule/smtps http://www.mulesoft.org/schema/mule/sm
                 <smtp:outbound-endpoint host="${email.host}" port="${email.port}" user="${email.user}" password="${email.password}" to="${email.recipient}, ${email.internal}" from="${email.sender}" subject="${email.subject}" responseTimeout="10000" doc:name="SMTP"/>
             </otherwise>
         </choice>
-
 	</flow>
-
 </mule>
