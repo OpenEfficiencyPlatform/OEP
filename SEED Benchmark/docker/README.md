@@ -26,6 +26,7 @@ The configuration is setup entirely with environment variables to enable easy de
 * *OEP_CRON_TIMER:* Interval to check for updated data. 
     * Default is every hour: `0 0 0/1 ? * * *`
     * Trigger every minute for debugging: `0 0/1 0 ? * * *`
+    * See https://www.freeformatter.com/cron-expression-generator-quartz.html for more options.
 * *SALESFORCE_URL:* URL for Salesforce (with http(s)://).
 * *SALESFORCE_USER:* Salesforce user.
 * *SALESFORCE_PASSWORD:* Salesforce password.
