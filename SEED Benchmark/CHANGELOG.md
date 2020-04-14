@@ -1,5 +1,11 @@
 # OEP / SEED Benchmark
 
+## 1.5
+
+* Email log messages will return the correct HOST (instead of hard coded seedv2)
+* lastReadDate.txt will be looked for in /tmp/oep/lastReadDate.txt
+
+
 ## 1.4
 
 * Labels on the property details were not moved. This supports the labels on PropertyDetails instead of PropertyDetails.property. 
