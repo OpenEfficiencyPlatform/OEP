@@ -17,10 +17,10 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 
     <flow name="pollseedforpropertiesFlow">
         <poll doc:name="Poll">
-
+<!--            <fixed-frequency-scheduler frequency="1" timeUnit="MINUTES"/>-->
             <schedulers:cron-scheduler expression="${cron.timer}"/>
-            <http:request config-ref="SEED_API" path="/organizations" method="GET" doc:name="HTTP: GET organization id"/>
 
+            <http:request config-ref="SEED_API" path="/organizations" method="GET" doc:name="HTTP: GET organization id"/>
         </poll>
 
         <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
@@ -49,9 +49,8 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
         </catch-exception-strategy>
     </flow>
     <flow name="getpropertiesfororg" processingStrategy="synchronous">
+        <set-variable variableName="SeedPath" value="/labels/filter/?inventory_type=property_view&amp;organization_id=#[flowVars.organization_id]" doc:name="Variable"/>
         <http:request config-ref="SEED_API" path="/labels/filter/?inventory_type=property_view&amp;organization_id=#[flowVars.organization_id]" method="POST" doc:name="HTTP: Get all labels for my organization"/>
-
-
         <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
         <scripting:transformer doc:name="Groovy: only look at properties with the 'Add to Salesforce' Label">
             <scripting:script engine="Groovy"><![CDATA[return payload.find { it.name == flowVars.IndicationLabel }]]></scripting:script>
@@ -60,7 +59,11 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
             <logger message="Getting details from SEED for property: #[payload]" level="INFO" doc:name="Logger"/>
             <flow-ref name="GetPropertyDetailsFromSEED" doc:name="GetPropertyDetailsFromSEED"/>
 		</foreach>
-
+		</foreach>
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <set-variable variableName="ErrorLog" value="#['Calling ' + ${SEED.url}  + flowVars.SeedPath + ' resulted in the response:  \n \n ' + message.payloadAs(java.lang.String)]" doc:name="Variable"/>
+            <flow-ref name="ErrorHandler" doc:name="Flow Reference"/>
+        </catch-exception-strategy>
     </flow>
       <flow name="GetPropertyDetailsFromSEED">
         <set-variable variableName="PropertyId" value="#[payload]" doc:name="Variable: SEED Property Id"/>
@@ -74,8 +77,10 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
 import java.util.Calendar;
 import java.util.Date;
 import java.text.SimpleDateFormat
+
 def file = new File('/tmp/oep/lastReadDate.txt');
 String fileContents = file.exists() ? file.text : '2001-01-01 12:00:00.000';
+
 SimpleDateFormat sdf = new SimpleDateFormat('yyyy-MM-dd HH:mm:ss.SSS');
 Date date = sdf.parse(fileContents);
 Calendar c = Calendar.getInstance();
@@ -85,13 +90,16 @@ c.add(Calendar.DATE, -1);
 Date seedUpdatedDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", flowVars.updatedDate);
 Date seedDate = sdf.parse(seedUpdatedDate.format('yyyy-MM-dd HH:mm:ss.SSS'));
 message.setInvocationProperty('seedDate', seedDate);
+
 return sdf.parse(sdf.format(c.getTime()));
+
+
 ]]></scripting:script>
         </scripting:component>
         <expression-filter expression="#[flowVars.seedDate &gt; payload]" doc:name="Expression: Filter anything not recently updated"/>
         <logger message="Getting details for labels from Property: #[flowVars.PropertyDetails.property.id]" level="INFO" doc:name="Logger"/>
         <set-variable variableName="labelNames" value="#[[]]" doc:name="Variable: Array of Label Names"/>
-        <set-payload value=" #[flowVars.PropertyDetails.property.labels]" mimeType="application/json" doc:name="Set Payload"/>
+        <set-payload value=" #[flowVars.PropertyDetails.labels]" mimeType="application/json" doc:name="Set Payload"/>
         <json:json-to-object-transformer returnClass="java.lang.Object" doc:name="JSON to Object"/>
         <foreach doc:name="For Each">
             <set-variable variableName="LabelID" value="#[payload]" doc:name="Variable"/>
@@ -166,6 +174,7 @@ return sdf.parse(sdf.format(c.getTime()));
                         <set-variable variableName="SFAccountId" value="#[payload[0].id]" doc:name="Variable: Set the SF Account ID"/>
                     </otherwise>
                 </choice>
+
             </otherwise>
         </choice>
         <scripting:transformer doc:name="Groovy: map fields to new Contact">
@@ -175,7 +184,7 @@ return sdf.parse(sdf.format(c.getTime()));
             <sfdc:objects ref="#[payload]"/>
         </sfdc:create>
         <set-variable variableName="ContactResults" value="#[payload[0].id]" doc:name="Variable: Save the SF Contact Id"/>
-	<catch-exception-strategy doc:name="pollseedforpropertiesCatch_Exception_Strategy">
+	      <catch-exception-strategy doc:name="pollseedforpropertiesCatch_Exception_Strategy">
             <set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;\n \n [Error4] Salesforce Account: '&quot; + flowVars.AccountName + &quot;' with Salesforce Contact email: '&quot; + flowVars.contactEmail + &quot;' aren't already objects in Salesforce but could not be created due to:  ==&gt; &quot; +exception.cause.?message or exception.cause]" doc:name="Variable"/>
             <set-variable variableName="ErrorLog" value="#[flowVars.ErrorLog + &quot;.  \n As a result the SEED property named: [(&quot;  + flowVars.PropertyName + &quot;),  Seed ID: (&quot; + flowVars.PropertyId + &quot;)] will not be updated in Salesforce until the issue is resolved.  Confirm that the SEED 'Organization' field&#160;has an exact match with the Salesforce 'Account Name'. If they do not match then update one so that they do.&quot;]" doc:name="Variable"/>
         </catch-exception-strategy>
@@ -187,7 +196,9 @@ return sdf.parse(sdf.format(c.getTime()));
                 <scripting:component doc:name="Groovy: Map In Violation Property To SF Benchmark">
                     <scripting:script engine="Groovy"><![CDATA[def property = flowVars["PropertyDetails"].state;
 def propData = property.extra_data;
+
 message.setInvocationProperty('SFPremiseId', propData["Benchmark Salesforce ID"]);
+
 Property =
 [
 	Id: propData["Benchmark Salesforce ID"],
@@ -195,6 +206,7 @@ Property =
 	oei__Status__c: flowVars["IsInViolation"] ? flowVars["ViolationStatus"] : flowVars["CompliedStatus"],
 	oei__SEED_Labels__c: flowVars["labelNameString"]
 ]
+
 return [Property]]]></scripting:script>
                 </scripting:component>
             </when>

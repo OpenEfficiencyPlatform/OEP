@@ -17,14 +17,12 @@ http://www.mulesoft.org/schema/mule/smtps http://www.mulesoft.org/schema/mule/sm
 
 			<logger message="Current Payload: #[payload]" level="INFO" doc:name="Logger: Capture payload" doc:description="Log the details"/>
         <choice doc:name="Choice">
-            <when expression="#[${email.secure} == true]">
+            <when expression="#[${email.secure} == 'true']">
                 <smtps:outbound-endpoint host="${email.host}" port="${email.port}" user="${email.user}" password="${email.password}" to="${email.recipient}, ${email.internal}" from="${email.sender}" subject="${email.subject}" responseTimeout="10000" doc:name="SMTP: Outbound email exception" doc:description="Mail the exception which has been caught and logged to a configured recipient"/>
             </when>
             <otherwise>
                 <smtp:outbound-endpoint host="${email.host}" port="${email.port}" user="${email.user}" password="${email.password}" to="${email.recipient}, ${email.internal}" from="${email.sender}" subject="${email.subject}" responseTimeout="10000" doc:name="SMTP"/>
             </otherwise>
         </choice>
-
 	</flow>
-
 </mule>
