@@ -1,5 +1,9 @@
 # OEP / SEED Benchmark
 
+## 1.6 (Unreleased)
+
+* Escape quotes when passing data to SEED API
+
 ## 1.5
 
 * Email log messages will return the correct HOST (instead of hard coded seedv2)
