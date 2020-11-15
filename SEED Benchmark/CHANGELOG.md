@@ -1,8 +1,9 @@
 # OEP / SEED Benchmark
 
-## 1.6 (Unreleased)
+## 1.6 
 
 * Escape quotes when passing data to SEED API
+* Support SEED 2.7.4 API v2 and v2.1. This version does not work with SEED APIv3.
 
 ## 1.5
 
