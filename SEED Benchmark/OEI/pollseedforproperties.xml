@@ -59,7 +59,6 @@ http://www.mulesoft.org/schema/mule/schedulers http://www.mulesoft.org/schema/mu
             <logger message="Getting details from SEED for property: #[payload]" level="INFO" doc:name="Logger"/>
             <flow-ref name="GetPropertyDetailsFromSEED" doc:name="GetPropertyDetailsFromSEED"/>
 		</foreach>
-		</foreach>
         <catch-exception-strategy doc:name="Catch Exception Strategy">
             <set-variable variableName="ErrorLog" value="#['Calling ' + ${SEED.url}  + flowVars.SeedPath + ' resulted in the response:  \n \n ' + message.payloadAs(java.lang.String)]" doc:name="Variable"/>
             <flow-ref name="ErrorHandler" doc:name="Flow Reference"/>
@@ -152,7 +151,7 @@ return sdf.parse(sdf.format(c.getTime()));
     </sub-flow>
     <flow name="CreateContactAndAccount">
         <set-variable variableName="AccountName" value="#[flowVars.PropertyDetails.state.extra_data[&quot;Organization&quot;].trim()]" doc:name="Variable: SF Account Name"/>
-        <sfdc:query-single config-ref="Testbed-Salesforce" query="Select Id from Account where Name = '#[flowVars.AccountName]'" doc:name="Salesforce: Get Account if available"/>
+        <sfdc:query-single config-ref="Testbed-Salesforce" query="Select Id from Account where Name = '#[flowVars.AccountName.replace("'", "\\'")]'" doc:name="Salesforce: Get Account if available"/>
         <choice doc:name="Choice">
             <when expression="#[payload != null]">
                 <logger message="Found Account with Name: #[flowVars.AccountName]" level="INFO" doc:name="Logger"/>
