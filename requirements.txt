@@ -1,0 +1,3 @@
+# Run `pip install -r requirements.txt`
+
+pre-commit==2.7.1
