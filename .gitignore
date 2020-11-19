@@ -1,3 +1,4 @@
 .idea
 /SEED Benchmark/docker-compose.*.yml
 ~$*.docx
+.python-version

@@ -1,19 +1,21 @@
 # OEP / SEED Benchmark
 
-## 1.6 
+## 1.6
 
 * Escape quotes when passing data to SEED API
 * Support SEED 2.7.4 API v2 and v2.1. This version does not work with SEED APIv3.
+* Format the files (autoformat XML files, consistent line endings)
+* Sync the pollseedforproperties.xml file across the OEI and OEI/classes folders.
+* Install pre-commit
 
 ## 1.5
 
 * Email log messages will return the correct HOST (instead of hard coded seedv2)
 * lastReadDate.txt will be looked for in /tmp/oep/lastReadDate.txt
 
-
 ## 1.4
 
-* Labels on the property details were not moved. This supports the labels on PropertyDetails instead of PropertyDetails.property. 
+* Labels on the property details were moved. This supports the labels on PropertyDetails instead of PropertyDetails.property.
 
 ## 1.3
 
