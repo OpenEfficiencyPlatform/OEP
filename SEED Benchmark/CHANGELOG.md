@@ -4,12 +4,14 @@
 
 * Escape quotes when passing data to SEED API
 * Support SEED 2.7.4 API v2 and v2.1. This version does not work with SEED APIv3.
+* Format the files (autoformat XML files, consistent line endings)
+* Sync the pollseedforproperties.xml file across the OEI and OEI/classes folders.
+* Install pre-commit
 
 ## 1.5
 
 * Email log messages will return the correct HOST (instead of hard coded seedv2)
 * lastReadDate.txt will be looked for in /tmp/oep/lastReadDate.txt
-
 
 ## 1.4
 
