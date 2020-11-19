@@ -17,7 +17,7 @@ if [ "${IMAGETAG}" != "skip" ] && [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
     docker login -u $DOCKER_USER -p $DOCKER_PASS
 
     echo "Tagging image as $IMAGETAG"
-    docker tag seedplatform/oep seedplatform/oep:$IMAGETAG
+    docker tag seedplatform/oep:latest seedplatform/oep:$IMAGETAG
     docker push seedplatform/oep:$IMAGETAG
 else
     echo "Not on a deployable branch, this is either a pull request or on a non-active branch"

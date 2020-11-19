@@ -16,10 +16,12 @@ It includes the OEP Benchmark Implementation Guide and OEP User Guide.
 ## Deployment
 
 The preferred method of deployment is to use docker and docker stack deploy. The docker containers are provided on [Docker Hub](https://cloud.docker.com/u/seedplatform/repository/docker/seedplatform/oep) but can also be built locally for development and testing. In order to use docker, it is recommended to follow the instructions in the [docker folder](docker/README.md). The instructions include how to configure the configuration files for deployment.
- 
+
+## Development Notes
+
+* The Docker version uses the versions in the OEI/*.xml directory. For some reason, when developing in Eclipse it appears that the OEI/classes/*.xml are used. It is important that both these files are "in-sync".
+
 # TODO
 
 * Remove spaces from directory names. It can cause some trivial issues with Docker
 * Add Docker instructions to Benchmark Implementation Guide
-
-

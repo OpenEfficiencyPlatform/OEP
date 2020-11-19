@@ -1,6 +1,6 @@
 
 
-Account = 
+Account =
 [
 	Name: flowVars.AccountName,
 	RecordTypeId: flowVars.DefaultAccountRecordType
