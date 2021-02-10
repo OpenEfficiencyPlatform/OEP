@@ -14,7 +14,7 @@
     <eclipsePluginVersion>2.8</eclipsePluginVersion>
     <jdkName>JavaSE-1.8</jdkName>
     <jdk.version>1.7</jdk.version>
-    <junit.version>4.9</junit.version>
+    <junit.version>4.13.1</junit.version>
   </properties>
   <build>
     <!-- Use a newer version of the install plugin than what your Maven uses
