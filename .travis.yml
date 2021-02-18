@@ -1,9 +1,0 @@
-addons:
-  apt:
-    packages:
-      - libxml2-utils  # xmllint
-services:
-  - docker
-script:
-  - echo "There are no tests for this yet, so just build the container and cross your fingers"
-  - SEED\ Benchmark/docker/travis_build_docker.sh
